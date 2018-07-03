@@ -351,9 +351,11 @@ module.exports = function(app) {
 
     console.log("CREATE called", req.params.collection_name);
 
-    createOrUpdateItem(req.params.collection_name, note).then((data) => {
-      console.log("data", data);
-      res.send(data);
+    createOrUpdateItem(req.params.collection_name, note).then((bundleHash) => {
+      console.log("bundleHash", bundleHash);
+      res.send({
+        bundleHash: bundleHash
+      });
     });
   });
 
