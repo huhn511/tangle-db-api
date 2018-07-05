@@ -347,11 +347,11 @@ module.exports = function(app) {
   // CREATE
   app.post('/:collection_name', (req, res) => {
     const collection_name = req.params.collection_name;
-    const note = { text: req.body.body, title: req.body.title };
+    const data = { ...req.body };
 
     console.log("CREATE called", req.params.collection_name);
 
-    createOrUpdateItem(req.params.collection_name, note).then((bundleHash) => {
+    createOrUpdateItem(req.params.collection_name, data).then((bundleHash) => {
       console.log("bundleHash", bundleHash);
       res.send({
         bundleHash: bundleHash
