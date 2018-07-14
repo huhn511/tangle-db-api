@@ -23,13 +23,30 @@ module.exports = function(app) {
   }
 
   async function signData(data) {
+
+    // deletes old sig attribute, if existing
     delete data.sig;
+
+    // convert obj to json
     const json = JSON.stringify(data);
+
+    // load file with private key
     const file = await util.promisify(fs.readFile)(path.join(privKeyFile));
+
+    // Creates and returns a Verify object that uses RSA-SHA256
+    //https://en.wikipedia.org/wiki/RSA_(cryptosystem)
+
+    // https://en.wikipedia.org/wiki/RSA_(cryptosystem)
+    // https://en.wikipedia.org/wiki/Secure_Hash_Algorithms
     const signer = crypto.createSign("RSA-SHA256");
+
+    // Updates the Verify content with the given data
     signer.update(json);
+
+    // Calculates the signature on the json data with the private key and returns the signature in hex as a string
+    // https://nodejs.org/api/crypto.html#crypto_sign_sign_privatekey_outputformat
     return signer.sign(file.toString(), "hex");
-}
+  }
 
   async function verifyData(data) {
     if (!data.sig) {
@@ -117,7 +134,6 @@ module.exports = function(app) {
         else {
             console.log("No index.");
         }
-        console.log("loadedIndex", loadedIndex);
         return loadedIndex;
     }
     catch (err) {
