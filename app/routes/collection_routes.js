@@ -12,8 +12,10 @@ module.exports = function(app) {
   const IOTA = require("iota.lib.js");
   const crypto = require("crypto");
 
+  const provider = 'https://nodes.testnet.iota.org:443'
+
   const iota = new IOTA({
-      provider: "http://nodes.iota.fm:80"
+      provider: provider
   });
 
   async function readConfigFile() {
@@ -113,7 +115,7 @@ module.exports = function(app) {
     await util.promisify(fs.writeFile)(path.join(configFile), JSON.stringify(config, undefined, "\t"));
   }
 
-  async function index(table) {
+  async function index(table, return_with_entries) {
     try {
         console.log(`command: index`);
         if (!table || table.length === 0) {
@@ -134,6 +136,24 @@ module.exports = function(app) {
         else {
             console.log("No index.");
         }
+
+        // get objects from indexAddress
+        if(return_with_entries === "true" && loadedIndex.bundles) {
+          const bundles = loadedIndex.bundles;
+          var entries = []
+
+          for (var index in bundles) {
+            const bundleHash = bundles[index]
+            console.log("bundleHash #" + index + ": " + bundleHash);
+            let objs = await readItem(table, bundleHash)
+            let obj = objs[0]
+            obj.bundleHash = bundleHash
+            entries.push(obj)
+          }
+          loadedIndex.entries = entries;
+        }
+
+
         return loadedIndex;
     }
     catch (err) {
@@ -352,10 +372,9 @@ module.exports = function(app) {
   // INDEX
   app.get('/:collection_name', (req, res) => {
     const collection_name = req.params.collection_name;
-
+    const return_with_entries = req.query.return_with_entries
     console.log("INDEX called", collection_name);
-    index(collection_name).then((data) => {
-      console.log("now?", data);
+    index(collection_name, return_with_entries).then((data) => {
       res.send(data);
     });
   });
@@ -407,17 +426,11 @@ module.exports = function(app) {
     const collection_name = req.params.collection_name;
     const id = req.params.id;
 
-    console.log("UPDATE called", collection_name);
 
-    deleteItem('people', id).then((err) => {
-      console.log("err", err);
-      if(err){
-        res.send(err);
-      } else {
-        res.send({
-          message: 'successfully deleted!'
-        });
-      }
+    deleteItem(collection_name, id).then((data) => {
+
+        res.send(data);
+
 
     });
   });
